@@ -1,14 +1,16 @@
 import sys
 import nltk
 import re
+import pickle
 import numpy as np
 import pandas as pd
+from datetime import datetime
+
 from sqlalchemy import create_engine
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import confusion_matrix
+
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.metrics import classification_report,accuracy_score,precision_score,recall_score,f1_score
 from sklearn.model_selection import GridSearchCV
@@ -66,11 +68,12 @@ def build_model():
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier()))#The number of jobs to use for the computation.
+        ('clf', MultiOutputClassifier(RandomForestClassifier()))
         ])
     parameters = {
     'clf__estimator__n_estimators': [20, 50],
-    'clf__estimator__min_samples_split': [2, 4],
+    'clf__estimator__criterion': ['gini', 'entropy'],
+    'clf__estimator__min_samples_split':[2, 3, 4],
     }
 
     cv = GridSearchCV(pipeline, param_grid=parameters)
@@ -115,13 +118,17 @@ def main():
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        
+        start = datetime.now()
+
         print('Building model...')
         model = build_model()
         
-        print('Training model...')
+        print('Training model... Start at {}'.format(start))
         model.fit(X_train, Y_train)
-        
+        end = datetime.now()
+        print('Training model...Process time {}'.format(end - start))
+
+
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
 

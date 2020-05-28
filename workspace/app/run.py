@@ -1,13 +1,14 @@
 import json
 import plotly
 import pandas as pd
+import numpy as np
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
 from flask import Flask
 from flask import render_template, request, jsonify
-from plotly.graph_objs import Bar
+from plotly.graph_objs import Bar ,Heatmap
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
@@ -15,94 +16,90 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
-    tokens = word_tokenize(text)
-    lemmatizer = WordNetLemmatizer()
+	tokens = word_tokenize(text)
+	lemmatizer = WordNetLemmatizer()
 
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
+	clean_tokens = []
+	for tok in tokens:
+		clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+		clean_tokens.append(clean_tok)
 
-    return clean_tokens
+	return clean_tokens
 
 # load data
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('clean_table', engine)
-
+df.iloc[:,4:] =df.iloc[:,4:].astype('int')
 # load model
 model = joblib.load("../models/classifier.pkl")
+
+
+# extract data needed for visuals
+# distribution of messages by genre
+genre_counts = df.groupby('genre').count()["message"]
+genre_names = list(genre_counts.index)
+
+
+# Get top 20 categories
+top20 = df.iloc[:,4:].sum().sort_values(ascending=False)[1:20]
+top20_names = list(top20.index)
 
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
-    
-    # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
 
-    #Top 20 categories
-    cat_mean = df.iloc[:,4:].mean().sort_values(ascending=False)[1:20]
-    cat_names = list(top_cat_count.index)
-    # create visuals
-    # Comparison of Genre Distribution of categories medical_help vs. medical_products
-    med_help_mean=df.groupby('genre').mean()["medical_help"]
-    genre_names = list(cat_counts.index)
-    med_prod_mean=df.groupby('genre').mean()["medical_products"]
-    genre_names2 = list(cat_counts2.index)
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
-        {
+        {# Top 20 categories bar chart
             'data': [
-                Bar(
-                    x=cat_names,
-                    y=cat_mean
-                )
+                {
+                    "x": top20_names, 
+                    "y" : top20,
+                    "type": "bar", "name": "Top20 categories"}
             ],
-
+            
             'layout': {
-                'title': 'Bar Plot of Top 20 Disaster Categories',
+                'title': {'text':'Top 20 categories ','xanchor':'center'},
                 'yaxis': {
-                    'title': "Count"
+                 'title': "Count"
                 },
-                'xaxis': {
-                    'title': "Disaster Categories"
-                },
-        {
-            'data': [
-                Bar(
-                    x=genre_names,
-                    y=med_help_mean
-                ),
-                Bar(
-                    x=genre_names2,
-                    y=med_prod_mean
-                )
-            ],
-
-            'layout': {
-                'title': '',
-                'yaxis': {
-                    'title': "Mean"
-                },
-                'xaxis': {
-                    'title': "Medical Help vs. Medical Products"
-                }
+                "width": 1000,
+                "height": 800,
+                "autosize": False
             }
         },
 
-       
-            }
-        }
-    ]
-    
-    
+       {
+		'data':[ # distribution of genre with pie chart
+			{
+				"values": genre_counts,
+				"labels": genre_names,
+                "color": 'day',
+                "domain": {"x": [0, .75]},
+      			"name": "Genre",
+      			"hoverinfo":"label+percent+name",
+      			"type":"pie"
+				}
+
+
+		],
+	    'layout': {
+	        'title': {'text':'Distribution of Message Genres with a Pie Chart', 'x':0.375,'xanchor':'center' },
+            "width": 1500,
+            "height": 800,
+            "autosize": False,
+	    }
+	}	
+	]
+
+
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
-    
+
     # render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
@@ -127,7 +124,6 @@ def go():
 
 def main():
     app.run(host='0.0.0.0', port=3001, debug=True)
-
 
 if __name__ == '__main__':
     main()

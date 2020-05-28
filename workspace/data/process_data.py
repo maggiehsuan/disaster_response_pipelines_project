@@ -51,7 +51,7 @@ def clean_data(df):
         category_cols[column] = category_cols[column].str.split("-").str.get(1)
     
     # convert column from string to numeric
-    category_cols[column] = category_cols[column].astype(int)
+    category_cols[column] = category_cols[column].astype('int')
 
     # drop the categories column from `df`
     messages = df.drop('categories', axis=1)
