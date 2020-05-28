@@ -46,3 +46,7 @@ In a Python script, train_classifier.py, write a machine learning pipeline that:
 3. Flask Web App
 - Add data visualizations using Plotly in the web app. 
 - Run.py	Flask Web App (display visualization from the datasets, the app accept messages from users and returns classification results for 36 categories of disaster events)
+
+## Licensing, Authors, Acknowledgements
+
+This app is part of the Udacity Data Scientist Nanodegree. The data was provided by Figure Eight.
