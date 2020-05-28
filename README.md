@@ -22,8 +22,8 @@ Go to http://0.0.0.0:3001/ to view the web application, use 'env|grep WORK' comm
 
 Below are a few screenshots of the web app.
 
-<img src="png/disaster-response-project1.png" width="80%" alt="disaster response project web app">
-<img src="png/disaster-response-project2.png" width="80%" alt="disaster response project web app">
+<img src="https://github.com/maggiehsuan/disaster_response_pipelines_project/blob/master/workspace/png/disaster-response-project1.png" width="60%" alt="disaster response project web app">
+<img src="https://github.com/maggiehsuan/disaster_response_pipelines_project/blob/master/workspace/png/disaster-response-project2.png" width="60%" alt="disaster response project web app">
 
 ## File Descriptions
 
